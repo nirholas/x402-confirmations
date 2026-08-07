@@ -1,0 +1,257 @@
+{
+  "x402Version": 1,
+  "name": "x402-confirmations",
+  "description": "Normalize any booking confirmation into a portable record \u2014 ICS invite and status snapshots per query",
+  "resources": [
+    {
+      "resource": "POST /track",
+      "description": "Normalize a booking confirmation (structured JSON or freeform text) into a portable record + base64 ICS invite + HMAC signature, returned in-response.",
+      "price": "$0.005",
+      "networks": [
+        "base-sepolia",
+        "base",
+        "solana"
+      ],
+      "asset": "USDC",
+      "accepts": [
+        {
+          "network": "base-sepolia",
+          "asset": "USDC",
+          "assetAddress": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402"
+        },
+        {
+          "network": "base",
+          "asset": "USDC",
+          "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402"
+        },
+        {
+          "network": "solana",
+          "asset": "USDC",
+          "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "payTo": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+        }
+      ],
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "type": "object",
+            "properties": {
+              "confirmationId": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "restaurant",
+                  "hotel",
+                  "order",
+                  "flight",
+                  "appointment",
+                  "generic"
+                ]
+              },
+              "merchant": {
+                "type": "string"
+              },
+              "reference": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "when": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "end": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "start"
+                ]
+              },
+              "where": {
+                "type": "string"
+              },
+              "party": {
+                "type": "number"
+              },
+              "amount": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "string"
+                  },
+                  "currency": {
+                    "type": "string"
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "amended",
+                  "cancelled"
+                ]
+              },
+              "sourceFingerprint": {
+                "type": "string"
+              },
+              "normalizedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "extras": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "confirmationId",
+              "type",
+              "merchant",
+              "reference",
+              "when",
+              "status",
+              "sourceFingerprint"
+            ]
+          },
+          "ics": {
+            "type": "string",
+            "description": "base64 RFC 5545 calendar invite"
+          },
+          "ownerToken": {
+            "type": "string",
+            "description": "secret authorizing free status updates"
+          },
+          "signature": {
+            "type": "string",
+            "description": "HMAC-SHA256 over canonical record"
+          }
+        },
+        "required": [
+          "record",
+          "ics",
+          "ownerToken",
+          "signature"
+        ]
+      }
+    },
+    {
+      "resource": "GET /status/{id}",
+      "description": "Signed current status snapshot (status, temporal phase, minutes until start, history).",
+      "price": "$0.001",
+      "networks": [
+        "base-sepolia",
+        "base",
+        "solana"
+      ],
+      "asset": "USDC",
+      "accepts": [
+        {
+          "network": "base-sepolia",
+          "asset": "USDC",
+          "assetAddress": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+          "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402"
+        },
+        {
+          "network": "base",
+          "asset": "USDC",
+          "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402"
+        },
+        {
+          "network": "solana",
+          "asset": "USDC",
+          "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "payTo": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+        }
+      ],
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "confirmationId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "amended",
+              "cancelled"
+            ]
+          },
+          "temporal": {
+            "type": "string",
+            "enum": [
+              "upcoming",
+              "imminent",
+              "in-progress",
+              "past"
+            ]
+          },
+          "minutesUntilStart": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "when": {
+            "type": "object"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "confirmationId",
+          "status",
+          "temporal",
+          "when",
+          "history",
+          "signature"
+        ]
+      }
+    }
+  ],
+  "paymentRails": "Pay in USDC on Base or Solana \u2014 your client picks the rail.",
+  "accepts": [
+    {
+      "network": "base-sepolia",
+      "asset": "USDC",
+      "assetAddress": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402"
+    },
+    {
+      "network": "base",
+      "asset": "USDC",
+      "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402"
+    },
+    {
+      "network": "solana",
+      "asset": "USDC",
+      "assetAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "payTo": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW"
+    }
+  ],
+  "contact": "nichxbt@gmail.com"
+}

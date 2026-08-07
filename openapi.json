@@ -1,0 +1,554 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "x402-confirmations",
+    "version": "0.1.0",
+    "description": "Normalize any booking confirmation into a portable record — ICS invite and status snapshots per query. Paid routes use the x402 payment protocol (HTTP 402). Dual-rail: pay in USDC on Base (EVM) or USDC on Solana — your client picks the rail from the `accepts` array.",
+    "license": {
+      "name": "Apache-2.0",
+      "identifier": "Apache-2.0"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4021"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "PaymentRequirements": {
+        "type": "object",
+        "description": "x402 payment requirements returned with HTTP 402. `accepts` always lists both rails (USDC on Base and USDC on Solana); the client settles whichever one it can and retries with an X-PAYMENT header.",
+        "properties": {
+          "x402Version": {
+            "type": "integer",
+            "example": 1
+          },
+          "error": {
+            "type": "string"
+          },
+          "resource": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "mimeType": {
+                "type": "string"
+              }
+            }
+          },
+          "accepts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentRequirement"
+            }
+          }
+        },
+        "required": [
+          "x402Version",
+          "accepts"
+        ],
+        "example": {
+          "x402Version": 1,
+          "error": "Payment required — pay in USDC on Base or Solana; your client picks the rail.",
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "base-sepolia",
+              "maxAmountRequired": "1000",
+              "resource": "http://localhost:4021/example",
+              "description": "Example paid resource",
+              "mimeType": "application/json",
+              "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402",
+              "maxTimeoutSeconds": 60,
+              "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+              "extra": {
+                "name": "USDC",
+                "version": "2"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "solana",
+              "maxAmountRequired": "1000",
+              "amount": "1000",
+              "resource": "http://localhost:4021/example",
+              "description": "Example paid resource",
+              "mimeType": "application/json",
+              "payTo": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW",
+              "maxTimeoutSeconds": 60,
+              "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+              "extra": {
+                "feePayer": "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4",
+                "name": "USDC",
+                "decimals": 6
+              }
+            }
+          ]
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "NormalizedRecord": {
+        "type": "object",
+        "properties": {
+          "confirmationId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "restaurant",
+              "hotel",
+              "order",
+              "flight",
+              "appointment",
+              "generic"
+            ]
+          },
+          "merchant": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "when": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "end": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "start"
+            ]
+          },
+          "where": {
+            "type": "string"
+          },
+          "party": {
+            "type": "number"
+          },
+          "amount": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "string"
+              },
+              "currency": {
+                "type": "string"
+              }
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "amended",
+              "cancelled"
+            ]
+          },
+          "sourceFingerprint": {
+            "type": "string"
+          },
+          "normalizedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "extras": {
+            "type": "object"
+          }
+        }
+      },
+      "TrackResult": {
+        "type": "object",
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/NormalizedRecord"
+          },
+          "ics": {
+            "type": "string",
+            "description": "base64 RFC 5545 invite"
+          },
+          "ownerToken": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          }
+        }
+      },
+      "StatusSnapshot": {
+        "type": "object",
+        "properties": {
+          "confirmationId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "amended",
+              "cancelled"
+            ]
+          },
+          "temporal": {
+            "type": "string",
+            "enum": [
+              "upcoming",
+              "imminent",
+              "in-progress",
+              "past"
+            ]
+          },
+          "minutesUntilStart": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "when": {
+            "type": "object"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "signature": {
+            "type": "string"
+          }
+        }
+      },
+      "PaymentRequirement": {
+        "type": "object",
+        "description": "One accepted payment rail.",
+        "properties": {
+          "scheme": {
+            "type": "string",
+            "example": "exact"
+          },
+          "network": {
+            "type": "string",
+            "enum": [
+              "base-sepolia",
+              "base",
+              "solana",
+              "solana-devnet"
+            ]
+          },
+          "maxAmountRequired": {
+            "type": "string",
+            "description": "Atomic units (USDC has 6 decimals)."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Alias of maxAmountRequired, read by browser checkout clients."
+          },
+          "resource": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "payTo": {
+            "type": "string",
+            "description": "0x address on EVM rails, base58 address on Solana."
+          },
+          "maxTimeoutSeconds": {
+            "type": "integer"
+          },
+          "asset": {
+            "type": "string",
+            "description": "USDC contract address (EVM) or mint (Solana)."
+          },
+          "extra": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "scheme",
+          "network",
+          "maxAmountRequired",
+          "resource",
+          "payTo",
+          "asset"
+        ]
+      }
+    },
+    "responses": {
+      "PaymentRequired": {
+        "description": "x402 payment required — sign the USDC payment and retry with the X-PAYMENT header.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PaymentRequirements"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/track": {
+      "post": {
+        "summary": "Normalize a booking confirmation (paid, $0.005)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "confirmation": {
+                    "type": "object",
+                    "description": "Structured confirmation JSON from any merchant"
+                  },
+                  "rawText": {
+                    "type": "string",
+                    "description": "Freeform confirmation text (e.g. pasted email)"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "restaurant",
+                      "hotel",
+                      "order",
+                      "flight",
+                      "appointment",
+                      "generic"
+                    ]
+                  },
+                  "merchant": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Portable record + ICS + signature",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No usable input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          }
+        }
+      }
+    },
+    "/status/{id}": {
+      "get": {
+        "summary": "Signed status snapshot (paid, $0.001)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusSnapshot"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/update/{id}": {
+      "post": {
+        "summary": "Push a status change (free, ownerToken auth)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ownerToken",
+                  "status"
+                ],
+                "properties": {
+                  "ownerToken": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "confirmed",
+                      "amended",
+                      "cancelled"
+                    ]
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusSnapshot"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad ownerToken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check (free)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "service": {
+                      "type": "string"
+                    },
+                    "network": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
