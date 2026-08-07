@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>x402-confirmations — Normalize any booking confirmation into a portable record</title>
+<meta name="description" content="Normalize any booking confirmation into a portable record — ICS invite and status snapshots per query">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="x402-confirmations — Normalize any booking confirmation into a portable record">
+<meta property="og:description" content="Normalize any booking confirmation into a portable record — ICS invite and status snapshots per query">
+<meta property="og:image" content="/og.svg">
+<meta property="og:url" content="https://nirholas.github.io/x402-confirmations/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="x402-confirmations — Normalize any booking confirmation into a portable record">
+<meta name="twitter:description" content="Normalize any booking confirmation into a portable record — ICS invite and status snapshots per query">
+<meta name="twitter:image" content="/og.svg">
+<style>
+  :root { --accent:#0052ff; --bg:#fff; --fg:#0b0e14; --muted:#5a6270; --card:#f5f7fa; --border:#e3e7ee;
+          --code-bg:#0b0e14; --code-fg:#e6e9f0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0b0e14; --fg:#e6e9f0; --muted:#98a1b3; --card:#141a26; --border:#232b3b;
+            --code-bg:#05070c; --code-fg:#dfe4ee; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); line-height:1.6;
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width:860px; margin:0 auto; padding:0 20px; }
+  header { padding:64px 0 32px; }
+  .badge { display:inline-block; font-size:13px; font-weight:600; color:var(--accent);
+           border:1px solid var(--accent); border-radius:999px; padding:2px 12px; margin-bottom:16px; }
+  h1 { font-size:clamp(28px,5vw,40px); margin:0 0 10px; letter-spacing:-0.02em; }
+  .tag { color:var(--muted); font-size:18px; margin:0 0 22px; }
+  section { padding:30px 0; border-top:1px solid var(--border); }
+  h2 { font-size:21px; margin:0 0 14px; letter-spacing:-0.01em; }
+  p { margin:0 0 14px; }
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:15px; }
+  th,td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  code { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:13px; }
+  td code { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:1px 6px; }
+  code.m { font-weight:700; }
+  .price { color:var(--accent); font-weight:700; white-space:nowrap; }
+  .free { color:var(--muted); }
+  pre { background:var(--code-bg); color:var(--code-fg); border-radius:12px; padding:16px; overflow-x:auto;
+        font-size:13.5px; font-family:ui-monospace,Menlo,Consolas,monospace; line-height:1.55; }
+  a { color:var(--accent); }
+  ul { margin:0; padding-left:20px; }
+  footer { padding:34px 0 60px; border-top:1px solid var(--border); color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">x402 &middot; USDC on Base + Solana</span>
+    <h1>x402-confirmations</h1>
+    <p class="tag">Normalize any booking confirmation into a portable record — ICS invite and status snapshots per query</p>
+  </header>
+
+  <section>
+    <h2>Routes</h2>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Price</th><th>What it does</th></tr></thead>
+      <tbody>
+      <tr><td><code class="m">POST</code></td><td><code>/track</code></td><td><span class="price">$0.005</span></td><td>Normalize a booking confirmation</td></tr>
+      <tr><td><code class="m">GET</code></td><td><code>/status/{id}</code></td><td><span class="price">$0.001</span></td><td>Signed status snapshot</td></tr>
+      <tr><td><code class="m">POST</code></td><td><code>/update/{id}</code></td><td><span class="free">free</span></td><td>Push a status change (free, ownerToken auth)</td></tr>
+      <tr><td><code class="m">GET</code></td><td><code>/health</code></td><td><span class="free">free</span></td><td>Health check (free)</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Paying</h2>
+    <p>Call a paid route with no payment and you get an HTTP <code>402</code> whose
+       <code>accepts</code> array lists both rails (USDC on Base, USDC on Solana) plus the route's
+       <code>outputSchema</code> &mdash; the exact request shape to send and the response shape you get back.
+       Retry with an <code>X-PAYMENT</code> header and the artifact comes back in the same response.</p>
+<pre><code>const fetchWithPay = wrapFetchWithPayment(fetch, account);
+const res = await fetchWithPay("http://localhost:4037/track");</code></pre>
+  </section>
+
+  <section>
+    <h2>Discovery</h2>
+    <ul>
+      <li><a href="/openapi.json">/openapi.json</a> &mdash; OpenAPI 3.1 spec with per-route pricing</li>
+      <li><a href="/.well-known/x402">/.well-known/x402</a> &mdash; x402 resource manifest</li>
+      <li><a href="/skill.md">/skill.md</a> &mdash; agent skill file for LLM clients</li>
+      <li><a href="https://github.com/nirholas/x402-confirmations">GitHub</a> &mdash; source, docs, and runnable examples</li>
+    </ul>
+  </section>
+
+  <footer>
+    x402-confirmations &middot; x402 v1 &middot; <a href="https://github.com/nirholas/x402-confirmations">github.com/nirholas/x402-confirmations</a>
+  </footer>
+</div>
+</body>
+</html>

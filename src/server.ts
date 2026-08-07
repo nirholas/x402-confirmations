@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { join } from "node:path";
 import { paywall, railSummary, type RoutePrices } from "./payments.js";
+import { ROUTE_SCHEMAS } from "./schemas.js";
 import { TrackError, status, track, update } from "./service.js";
 
 // Paid routes. `*` stands in for a path parameter. Free routes are absent here.
@@ -9,10 +10,12 @@ const PRICES: RoutePrices = {
   "POST /track": {
     price: "$0.005",
     description: "Normalize a booking confirmation; returns portable record + ICS base64 + signature",
+    ...ROUTE_SCHEMAS["POST /track"],
   },
   "GET /status/*": {
     price: "$0.001",
     description: "Signed status snapshot for a tracked confirmation",
+    ...ROUTE_SCHEMAS["GET /status/*"],
   },
 };
 
