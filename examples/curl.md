@@ -5,7 +5,7 @@ The 402 → pay → 200 walkthrough against a local server (`npm run dev` — bo
 ## 1. Paid route without payment → 402
 
 ```bash
-curl -i -X POST http://localhost:4021/track \
+curl -i -X POST http://localhost:4037/track \
   -H 'Content-Type: application/json' \
   -d '{"confirmation":{"reservationId":"res_1","confirmedTime":"2026-09-01T19:00:00Z","party":4,"merchant":"The Golden Fork"}}'
 ```
@@ -21,7 +21,7 @@ HTTP/1.1 402 Payment Required
       "scheme": "exact",
       "network": "base-sepolia",
       "maxAmountRequired": "5000",          // $0.005 in 6-decimal USDC units
-      "resource": "http://localhost:4021/track",
+      "resource": "http://localhost:4037/track",
       "mimeType": "application/json",
       "payTo": "0x40252CFDF8B20Ed757D61ff157719F33Ec332402",
       "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
@@ -33,7 +33,7 @@ HTTP/1.1 402 Payment Required
       "network": "solana",
       "maxAmountRequired": "5000",
       "amount": "5000",
-      "resource": "http://localhost:4021/track",
+      "resource": "http://localhost:4037/track",
       "mimeType": "application/json",
       "payTo": "WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW",
       "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
@@ -53,13 +53,13 @@ Two entries, two rails. Take whichever your wallet can sign — the server settl
 transaction on the Solana entry. Produce it with any x402 client rather than by hand:
 
 ```bash
-PRIVATE_KEY=0x… BASE_URL=http://localhost:4021 npx tsx examples/agent-client.ts
+PRIVATE_KEY=0x… BASE_URL=http://localhost:4037 npx tsx examples/agent-client.ts
 ```
 
 ## 3. Retry with X-PAYMENT → 200/201
 
 ```bash
-curl -i -X POST http://localhost:4021/track \
+curl -i -X POST http://localhost:4037/track \
   -H 'Content-Type: application/json' -H "X-PAYMENT: $PAYMENT_B64" \
   -d '{"rawText":"Reservation at Chez Nous confirmed for 2026-09-01 19:30. Confirmation: QX4T9B. Table for 2."}'
 ```
@@ -76,8 +76,8 @@ jq -r .ics response.json | base64 -d > booking.ics
 ## Status snapshot ($0.001) and free owner update
 
 ```bash
-curl -H "X-PAYMENT: $PAYMENT_B64" http://localhost:4021/status/cnf_…
-curl -X POST http://localhost:4021/update/cnf_… \
+curl -H "X-PAYMENT: $PAYMENT_B64" http://localhost:4037/status/cnf_…
+curl -X POST http://localhost:4037/update/cnf_… \
   -H 'Content-Type: application/json' \
   -d '{"ownerToken":"own_…","status":"cancelled","note":"plans changed"}'
 ```
@@ -91,6 +91,6 @@ challenge and drives Phantom for you.
 
 ```bash
 # see both rails at a glance
-curl -s -X POST http://localhost:4021/ -H 'content-type: application/json' -d '{}' \
+curl -s -X POST http://localhost:4037/ -H 'content-type: application/json' -d '{}' \
   | jq '.accepts[] | {network, payTo, asset, maxAmountRequired}'
 ```

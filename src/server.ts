@@ -80,7 +80,7 @@ function handleError(res: express.Response, e: unknown): void {
   res.status(500).json({ error: "INTERNAL", message: "unexpected error" });
 }
 
-const port = Number(process.env.PORT || 4021);
+const port = Number(process.env.PORT || 4037);
 app.listen(port, () => {
   console.log(`x402-confirmations listening on :${port}`);
   for (const line of railSummary()) console.log(line);

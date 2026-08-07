@@ -16,7 +16,7 @@ import { z } from "zod";
 import { privateKeyToAccount } from "viem/accounts";
 import { wrapFetchWithPayment } from "x402-fetch";
 
-const BASE_URL = process.env.CONFIRMATIONS_URL || "http://localhost:4021";
+const BASE_URL = process.env.CONFIRMATIONS_URL || "http://localhost:4037";
 const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
 const payFetch = wrapFetchWithPayment(fetch, account);
 
@@ -64,7 +64,7 @@ await server.connect(new StdioServerTransport());
       "command": "npx",
       "args": ["tsx", "/absolute/path/to/mcp-confirmations.ts"],
       "env": {
-        "CONFIRMATIONS_URL": "http://localhost:4021",
+        "CONFIRMATIONS_URL": "http://localhost:4037",
         "PRIVATE_KEY": "0x…funded Base Sepolia wallet…"
       }
     }

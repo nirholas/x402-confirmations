@@ -25,7 +25,7 @@ the operator is paid per call instead of running a free service.
 ```bash
 git clone https://github.com/nirholas/x402-confirmations
 cd x402-confirmations && npm install
-npm run dev                                          # server on :4021, both rails live
+npm run dev                                          # server on :4037, both rails live
 
 # agent side (Base Sepolia USDC — faucet: https://faucet.circle.com)
 PRIVATE_KEY=0xAgentWallet npm run client

@@ -6,7 +6,7 @@ understood natively) or freeform text (a pasted confirmation email); get back on
 record, an RFC 5545 ICS calendar invite (base64), and an HMAC signature. Then buy signed
 status snapshots per query. Every paid call returns its artifact in the 200 body.
 
-**Base URL**: `{BASE_URL}` (self-hosted — e.g. `http://localhost:4021`)
+**Base URL**: `{BASE_URL}` (self-hosted — e.g. `http://localhost:4037`)
 
 ## Endpoints
 

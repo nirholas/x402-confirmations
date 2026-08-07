@@ -43,7 +43,7 @@ npm run dev
 The banner prints both payment rails and the paid routes:
 
 ```
-x402-confirmations listening on :4021
+x402-confirmations listening on :4037
   rail evm     base-sepolia   USDC → 0x40252CFDF8B20Ed757D61ff157719F33Ec332402  (facilitator https://x402.org/facilitator)
   rail solana  solana         USDC → WwwuGbqHrwF5RG89KhUbmRWEvjnRH9k5kVM5p7T3WwW  (facilitator https://facilitator.payai.network)
   paid routes:
@@ -54,7 +54,7 @@ x402-confirmations listening on :4021
 ## 4. Your first 402
 
 ```bash
-curl -i -X POST http://localhost:4021/track \
+curl -i -X POST http://localhost:4037/track \
   -H 'Content-Type: application/json' \
   -d '{"confirmation":{"reservationId":"res_1","confirmedTime":"2026-09-01T19:00:00Z","party":4,"merchant":"The Golden Fork"}}'
 ```
@@ -67,7 +67,7 @@ wallet supports; the server settles whichever one comes back in `X-PAYMENT`.
 To see just the rails:
 
 ```bash
-curl -s -X POST http://localhost:4021/track -H 'content-type: application/json' -d '{}' \
+curl -s -X POST http://localhost:4037/track -H 'content-type: application/json' -d '{}' \
   | jq '.accepts[] | {network, payTo, asset, maxAmountRequired}'
 ```
 
@@ -76,7 +76,7 @@ curl -s -X POST http://localhost:4021/track -H 'content-type: application/json' 
 Fund a throwaway wallet with Base Sepolia USDC (https://faucet.circle.com), then:
 
 ```bash
-PRIVATE_KEY=0xAgentWallet BASE_URL=http://localhost:4021 npm run client
+PRIVATE_KEY=0xAgentWallet BASE_URL=http://localhost:4037 npm run client
 ```
 
 `examples/agent-client.ts` uses `x402-fetch`, which intercepts the 402, picks the EVM entry
@@ -131,7 +131,7 @@ PRIVATE_KEY=0xAgentWallet npx tsx examples/agent-client.ts    # also does a stat
 If the merchant cancels, they push it for free with the `ownerToken`:
 
 ```bash
-curl -X POST http://localhost:4021/update/cnf_7f3a… \
+curl -X POST http://localhost:4037/update/cnf_7f3a… \
   -H 'Content-Type: application/json' \
   -d '{"ownerToken":"own_…","status":"cancelled","note":"kitchen fire"}'
 ```
