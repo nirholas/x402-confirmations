@@ -1,0 +1,25 @@
+{
+  "name": "x402-confirmations",
+  "owner": {
+    "name": "nirholas"
+  },
+  "description": "Normalize any booking confirmation into a portable record with an ICS invite and signed status snapshots over x402.",
+  "plugins": [
+    {
+      "name": "x402-confirmations",
+      "source": "./plugins/x402-confirmations",
+      "description": "Normalize any booking confirmation into a portable record with an ICS invite and signed status snapshots over x402.",
+      "category": "productivity",
+      "tags": [
+        "x402",
+        "usdc",
+        "solana",
+        "base",
+        "agentic-commerce",
+        "http-402",
+        "calendar",
+        "ics"
+      ]
+    }
+  ]
+}
